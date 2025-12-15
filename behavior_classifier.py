@@ -277,7 +277,7 @@ class BehaviorClassifier:
         
         return min(score, 1.0)
     
-    def _detect_falling(self, posture: Dict, angles: Dict, velocity: Dict) -> float:
+    def _detect_falling(self, posture: Dict, angles: Dict, velocity: float) -> float:
         """Detect falling/collapse behavior"""
         score = 0.0
         

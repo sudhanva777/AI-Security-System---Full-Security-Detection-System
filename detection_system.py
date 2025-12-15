@@ -1,13 +1,11 @@
 """
-AI Security System v4.0 - Full Security Detection System with Auto Environment Switching
-Integrates: Motion Detection, Behavior Classification, Emotion Recognition,
-Weapon Detection, Threat Level Engine, and Auto Environment Mode Switching
+AI Security System - Optimized Security Detection System
+Integrates: Motion Detection, Behavior Classification, Emotion Recognition, and Weapon Detection
 """
 import os
 import time
 import cv2
 import mediapipe as mp
-import threading
 
 # --- PATCH: FORCE ABSOLUTE PATH LOADING ---
 # MediaPipe wrongly prepends site-packages to absolute paths on Windows.
@@ -30,18 +28,12 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from datetime import datetime
 from typing import Optional, Tuple, Dict, Any, List
-import json
 
 # Import AI modules
 from motion_detector import MotionDetector
 from behavior_classifier import BehaviorClassifier
 from emotion_detector import EmotionDetector
 from weapon_detector import WeaponDetector
-from threat_engine import ThreatEngine, ThreatLevel
-
-# Import v4.0 Auto Environment Switching modules
-from auto_mode_selector import EnvironmentModeSelector, EnvironmentMode
-from night_vision_processor import NightVisionProcessor
 
 from utils import (
     ConfigManager, Logger, Statistics, LocationService,
@@ -49,17 +41,10 @@ from utils import (
     create_save_folder, format_timestamp
 )
 
-# Sound alerts
-try:
-    from playsound import playsound
-    SOUND_AVAILABLE = True
-except ImportError:
-    SOUND_AVAILABLE = False
-    print("⚠ playsound not available. Sound alerts disabled.")
 
 
 class HumanDetectionSystem:
-    """AI Security System v4.0 - Full security detection with auto environment switching"""
+    """AI Security System - Optimized security detection system"""
     
     def __init__(self, config_path: str = "config.json"):
         self.config = ConfigManager(config_path)
@@ -137,75 +122,20 @@ class HumanDetectionSystem:
             confidence_threshold=weapon_confidence
         )
         
-        # Threat engine
-        emotion_weight = self.config.get("threat.emotion_weight", 0.2)
-        behavior_weight = self.config.get("threat.behavior_weight", 0.4)
-        motion_weight = self.config.get("threat.motion_weight", 0.1)
-        weapon_weight = self.config.get("threat.weapon_weight", 0.3)
-        self.threat_engine = ThreatEngine(
-            emotion_weight=emotion_weight,
-            behavior_weight=behavior_weight,
-            motion_weight=motion_weight,
-            weapon_weight=weapon_weight
-        )
-        
-        # === v4.0: Auto Environment Switching Modules ===
-        # Environment mode selector
-        threat_threshold = self.config.get("mode.threat_threshold", 0.7)
-        motion_threshold = self.config.get("mode.motion_threshold", 70.0)
-        brightness_low_light = self.config.get("mode.brightness_low_light", 40.0)
-        brightness_night = self.config.get("mode.brightness_night", 12.0)
-        ir_brightness_threshold = self.config.get("mode.ir_brightness_threshold", 20.0)
-        ir_noise_threshold = self.config.get("mode.ir_noise_threshold", 40.0)
-        
-        self.mode_selector = EnvironmentModeSelector(
-            threat_threshold=threat_threshold,
-            motion_threshold=motion_threshold,
-            brightness_low_light=brightness_low_light,
-            brightness_night=brightness_night,
-            ir_brightness_threshold=ir_brightness_threshold,
-            ir_noise_threshold=ir_noise_threshold
-        )
-        
-        # Night vision processor
-        gamma_low_light = self.config.get("mode.gamma_low_light", 2.0)
-        gamma_night = self.config.get("mode.gamma_night", 2.4)
-        denoise_strength = self.config.get("mode.denoise_strength", 10)
-        
-        self.night_vision_processor = NightVisionProcessor(
-            gamma_low_light=gamma_low_light,
-            gamma_night=gamma_night,
-            denoise_strength=denoise_strength
-        )
-        
         # Current detection results
         self.current_motion = {}
         self.current_behavior = {}
         self.current_emotion = {}
         self.current_weapon = {}
-        self.current_threat = {}
-        self.current_mode = {"mode_name": "DAY", "mode": EnvironmentMode.DAY}
-        
-        # Alert state
-        self.alert_flash_state = False
-        self.last_alert_time = 0
-        self.alert_cooldown = 2.0  # seconds between sound alerts
         
         # Frame timestamp for behavior tracking
         self.frame_timestamp = time.time()
         
-        # Thermal camera (optional)
-        self.thermal_available = self.config.get("mode.thermal_available", False)
-        self.thermal_cap = None
-        
         print_banner()
-        print_success("AI Security System v4.0 Initialized")
-        print_info("Modules: Motion Detection ✓ | Behavior Classification ✓ | Emotion Recognition ✓ | Weapon Detection ✓ | Threat Engine ✓")
-        print_info("NEW: Auto Environment Switching ✓ | Night Vision Processing ✓")
-        print_success("✓ Logging fixed (ASCII-only)")
-        print_success("✓ OpenCV font fixed")
-        print_success("✓ AI Security System v4.0 running smoothly")
-        self.logger.info("AI Security System v4.0 initialized with all modules")
+        print_success("AI Security System Initialized")
+        print_info("Modules: Motion Detection ✓ | Behavior Classification ✓ | Emotion Recognition ✓ | Weapon Detection ✓")
+        print_success("✓ System optimized and running smoothly")
+        self.logger.info("AI Security System initialized with all modules")
     
     def download_model(self):
         """Download MediaPipe model if not exists - Rule 5: Validate .task file exists"""
@@ -386,25 +316,15 @@ class HumanDetectionSystem:
         return False
     
     def draw_pose_landmarks(self, frame: np.ndarray) -> np.ndarray:
-        """Draw pose landmarks with adaptive threat-based colors"""
+        """Draw pose landmarks with standard green color"""
         if not self.is_human_detected():
             return frame
         
         annotated_frame = frame.copy()
         h, w = frame.shape[:2]
         
-        # Get threat level for color
-        threat_level = self.current_threat.get("threat_level", "normal")
-        
-        # Adaptive bracket color
-        if threat_level == "critical":
-            bracket_color = (0, 0, 255)  # Red
-        elif threat_level == "dangerous":
-            bracket_color = (0, 165, 255)  # Orange
-        elif threat_level == "suspicious":
-            bracket_color = (0, 255, 255)  # Yellow
-        else:
-            bracket_color = (0, 255, 0)  # Green
+        # Standard bracket color (green)
+        bracket_color = (0, 255, 0)  # Green
         
         # Get bounding box of detected person
         min_x, min_y = float('inf'), float('inf')
@@ -443,7 +363,7 @@ class HumanDetectionSystem:
             max_y = min(h, max_y + padding)
             
             bracket_size = 40
-            bracket_thickness = 4 if threat_level != "normal" else 3
+            bracket_thickness = 3
             
             # Top-left bracket
             cv2.line(annotated_frame, (min_x, min_y), (min_x + bracket_size, min_y), bracket_color, bracket_thickness)
@@ -462,7 +382,7 @@ class HumanDetectionSystem:
             cv2.line(annotated_frame, (max_x, max_y), (max_x, max_y - bracket_size), bracket_color, bracket_thickness)
             
             # Corner indicators
-            corner_size = 10 if threat_level != "normal" else 8
+            corner_size = 8
             cv2.rectangle(annotated_frame, (min_x - corner_size, min_y - corner_size), 
                          (min_x + corner_size, min_y + corner_size), bracket_color, 2)
             cv2.rectangle(annotated_frame, (max_x - corner_size, min_y - corner_size), 
@@ -475,81 +395,36 @@ class HumanDetectionSystem:
         return annotated_frame
     
     def draw_ui_overlay(self, frame: np.ndarray, fps: float, human_detected: bool) -> np.ndarray:
-        """Draw comprehensive AI Security System HUD with mode-based colors"""
+        """Draw comprehensive AI Security System HUD"""
         overlay = frame.copy()
         h, w = frame.shape[:2]
         
-        # Get current mode
-        current_mode_name = self.current_mode.get("mode_name", "DAY")
-        
-        # Get threat level for adaptive colors
-        threat_level = self.current_threat.get("threat_level", "normal")
-        threat_score = self.current_threat.get("threat_score", 0.0)
-        
-        # Mode-based color scheme (v4.0)
-        if current_mode_name == "THREAT_PRIORITY":
-            primary_color = (0, 0, 255)      # Red (flashing)
-            secondary_color = (0, 0, 200)
-            accent_color = (100, 100, 255)
-        elif current_mode_name == "MOTION_PRIORITY":
-            primary_color = (0, 255, 255)    # Yellow
-            secondary_color = (0, 200, 200)
-            accent_color = (100, 255, 255)
-        elif current_mode_name == "THERMAL":
-            primary_color = (0, 165, 255)    # Orange
-            secondary_color = (0, 120, 200)
-            accent_color = (100, 200, 255)
-        elif current_mode_name == "INFRARED":
-            primary_color = (0, 0, 255)      # Red
-            secondary_color = (0, 0, 200)
-            accent_color = (100, 100, 255)
-        elif current_mode_name == "NIGHT_VISION":
-            primary_color = (0, 255, 0)      # Neon green
-            secondary_color = (0, 200, 0)
-            accent_color = (100, 255, 100)
-        elif current_mode_name == "LOW_LIGHT":
-            primary_color = (255, 255, 0)    # Cyan
-            secondary_color = (200, 255, 255)
-            accent_color = (200, 255, 255)
-        else:  # DAY
-            primary_color = (0, 255, 0)      # Green
-            secondary_color = (0, 200, 0)
-            accent_color = (100, 255, 100)
-        
-        # Override with threat level if high threat
-        if threat_level == "critical":
-            primary_color = (0, 0, 255)      # Red
-        elif threat_level == "dangerous":
-            primary_color = (0, 165, 255)     # Orange
-        elif threat_level == "suspicious":
-            primary_color = (0, 255, 255)    # Yellow
+        # Standard color scheme (green)
+        primary_color = (0, 255, 0)      # Green
+        secondary_color = (0, 200, 0)
+        accent_color = (100, 255, 100)
         
         green_bright = (0, 255, 0)
         green_medium = (0, 200, 0)
-        green_dark = (0, 150, 0)
         white = (255, 255, 255)
         dark_bg = (0, 0, 0)
         
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_mono = cv2.FONT_HERSHEY_SIMPLEX  # Using SIMPLEX instead of MONOSPACE (not available in all OpenCV builds)
+        font_mono = cv2.FONT_HERSHEY_SIMPLEX
         
-        # === TOP HUD BAR (Extended for AI panels) ===
-        hud_height = 140
+        # === TOP HUD BAR ===
+        hud_height = 120
         overlay_top = overlay[0:hud_height, 0:w].copy()
         cv2.rectangle(overlay, (0, 0), (w, hud_height), dark_bg, -1)
         cv2.addWeighted(overlay_top, 0.3, overlay[0:hud_height, 0:w], 0.7, 0, overlay[0:hud_height, 0:w])
         
-        # Border with threat color
-        border_color = primary_color if threat_level != "normal" else green_bright
+        # Border
+        border_color = green_bright
         cv2.line(overlay, (0, hud_height), (w, hud_height), border_color, 3)
         cv2.line(overlay, (0, 0), (w, 0), border_color, 2)
         
         # === LEFT: STATUS & SYSTEM INFO ===
         status_x, status_y = 20, 25
-        
-        # Mode display (v4.0)
-        mode_text = f"MODE: {current_mode_name}"
-        cv2.putText(overlay, mode_text, (status_x, status_y), font_mono, 0.6, primary_color, 2)
         
         if human_detected:
             status_text = "TARGET ACQUIRED"
@@ -558,8 +433,8 @@ class HumanDetectionSystem:
             status_text = "NO TARGET"
             status_color = (100, 100, 100)
         
-        cv2.putText(overlay, status_text, (status_x, status_y + 25), font_mono, 0.6, status_color, 2)
-        cv2.putText(overlay, f"ID: {self.stats.detection_count:06d}", (status_x, status_y + 50), 
+        cv2.putText(overlay, status_text, (status_x, status_y), font_mono, 0.6, status_color, 2)
+        cv2.putText(overlay, f"ID: {self.stats.detection_count:06d}", (status_x, status_y + 30), 
                    font_mono, 0.4, white, 1)
         
         # === EMOTION PANEL ===
@@ -577,32 +452,6 @@ class HumanDetectionSystem:
         cv2.putText(overlay, "BEHAVIOR", (status_x, behavior_y), font_mono, 0.4, green_medium, 1)
         behavior_text = f"{behavior} ({behavior_conf:.2f})"
         cv2.putText(overlay, behavior_text, (status_x, behavior_y + 18), font_mono, 0.5, primary_color, 2)
-        
-        # === THREAT LEVEL PANEL (Center Top) ===
-        threat_x = w // 2 - 150
-        threat_y = 25
-        threat_text = f"THREAT LEVEL: {threat_level.upper()}"
-        (tw, th), _ = cv2.getTextSize(threat_text, font_mono, 0.8, 2)
-        
-        # Flashing effect for critical/dangerous
-        if threat_level in ["critical", "dangerous"]:
-            self.alert_flash_state = not self.alert_flash_state
-            if self.alert_flash_state:
-                cv2.rectangle(overlay, (threat_x - 10, threat_y - 5), 
-                            (threat_x + tw + 10, threat_y + th + 5), primary_color, -1)
-                cv2.putText(overlay, threat_text, (threat_x, threat_y + th), 
-                           font_mono, 0.8, (0, 0, 0), 2)  # Black text on colored bg
-            else:
-                cv2.putText(overlay, threat_text, (threat_x, threat_y + th), 
-                           font_mono, 0.8, primary_color, 2)
-        else:
-            cv2.putText(overlay, threat_text, (threat_x, threat_y + th), 
-                       font_mono, 0.8, primary_color, 2)
-        
-        # Threat score
-        score_text = f"SCORE: {threat_score:.2f}"
-        cv2.putText(overlay, score_text, (threat_x, threat_y + th + 25), 
-                   font_mono, 0.5, white, 1)
         
         # === MOTION INTENSITY BAR ===
         motion_y = 70
@@ -627,19 +476,11 @@ class HumanDetectionSystem:
         # === WEAPON WARNING BANNER ===
         if self.current_weapon.get("weapon_detected", False):
             weapon_y = 95
-            weapon_text = "⚠️  WEAPON DETECTED!"
+            weapon_text = "WEAPON DETECTED!"
             (ww, wh), _ = cv2.getTextSize(weapon_text, font_mono, 0.7, 2)
             weapon_x = w // 2 - ww // 2
-            
-            # Flashing red background
-            if self.alert_flash_state:
-                cv2.rectangle(overlay, (weapon_x - 10, weapon_y - 5), 
-                            (weapon_x + ww + 10, weapon_y + wh + 5), (0, 0, 255), -1)
-                cv2.putText(overlay, weapon_text, (weapon_x, weapon_y + wh), 
-                           font_mono, 0.7, (255, 255, 255), 2)
-            else:
-                cv2.putText(overlay, weapon_text, (weapon_x, weapon_y + wh), 
-                           font_mono, 0.7, (0, 0, 255), 2)
+            cv2.putText(overlay, weapon_text, (weapon_x, weapon_y + wh), 
+                       font_mono, 0.7, (0, 0, 255), 2)
         
         # === TOP RIGHT: STATISTICS & FPS ===
         stats_x = w - 250
@@ -674,17 +515,10 @@ class HumanDetectionSystem:
             cv2.putText(overlay, timestamp, (w - ts_width - 20, h - 20), 
                        font_mono, 0.4, green_medium, 1)
         
-        # === CORNER BRACKETS (Mode-based color) ===
+        # === CORNER BRACKETS ===
         corner_size = 30
-        # Thicker brackets for threat/motion priority modes
-        corner_thick = 4 if current_mode_name in ["THREAT_PRIORITY", "MOTION_PRIORITY"] else 3
+        corner_thick = 3
         bracket_color = primary_color
-        
-        # Flashing red borders for THREAT_PRIORITY
-        if current_mode_name == "THREAT_PRIORITY":
-            self.alert_flash_state = not self.alert_flash_state
-            if not self.alert_flash_state:
-                bracket_color = (0, 0, 100)  # Dim red when not flashing
         
         # Top-left
         cv2.line(overlay, (0, 0), (corner_size, 0), bracket_color, corner_thick)
@@ -699,20 +533,9 @@ class HumanDetectionSystem:
         cv2.line(overlay, (w, h), (w - corner_size, h), bracket_color, corner_thick)
         cv2.line(overlay, (w, h), (w, h - corner_size), bracket_color, corner_thick)
         
-        # === TARGET LOCK ANIMATION (for threats and threat priority mode) ===
-        if (threat_level in ["dangerous", "critical"] or current_mode_name == "THREAT_PRIORITY") and human_detected:
-            # Draw target lock circle (animated)
-            center_x, center_y = w // 2, h // 2
-            radius = 50 + int(10 * abs(np.sin(time.time() * 3)))  # Pulsing
-            cv2.circle(overlay, (center_x, center_y), radius, primary_color, 2)
-            cv2.circle(overlay, (center_x, center_y), radius - 20, primary_color, 1)
-            # Crosshair
-            cv2.line(overlay, (center_x - 30, center_y), (center_x + 30, center_y), primary_color, 2)
-            cv2.line(overlay, (center_x, center_y - 30), (center_x, center_y + 30), primary_color, 2)
-        
         return overlay
     
-    def send_email_with_image(self, recipient_email: str, image_path: str, location_details: Dict = None, threat_result: Dict = None) -> bool:
+    def send_email_with_image(self, recipient_email: str, image_path: str, location_details: Dict = None) -> bool:
         """Send email with captured image and threat information"""
         if not self.sender_password:
             self.logger.warning("Email password not set")
@@ -724,15 +547,7 @@ class HumanDetectionSystem:
             msg['From'] = self.sender_email
             msg['To'] = recipient_email
             
-            # Update subject based on threat level
-            if threat_result:
-                threat_level = threat_result.get("threat_level", "normal")
-                if threat_level in ["dangerous", "critical"]:
-                    subject = f"🚨 SECURITY ALERT: {threat_level.upper()} THREAT DETECTED"
-                else:
-                    subject = self.config.get("email.subject", "Person Detected - Location Alert")
-            else:
-                subject = self.config.get("email.subject", "Person Detected - Location Alert")
+            subject = self.config.get("email.subject", "Person Detected - Location Alert")
             
             msg['Subject'] = subject
             
@@ -758,40 +573,32 @@ class HumanDetectionSystem:
                 else:
                     location_info = self.location_service.get_location_for_email(force_update=True)
             
-            # Email body with statistics, location, and threat info
+            # Email body with statistics, location, and detection info
             body_template = self.config.get(
                 "email.body",
-                "A person was detected. Please find the captured image attached.\n\nDetection Time: {timestamp}\nTotal Detections Today: {count}\n\n{location}\n\n{threat_info}"
+                "A person was detected. Please find the captured image attached.\n\nDetection Time: {timestamp}\nTotal Detections Today: {count}\n\n{location}\n\n{detection_info}"
             )
             
-            # Add threat information
-            threat_info = ""
-            if threat_result and threat_result.get("threat_level") != "normal":
-                threat_level = threat_result.get("threat_level", "normal")
-                threat_score = threat_result.get("threat_score", 0.0)
-                alerts = threat_result.get("alerts", [])
-                behavior = self.current_behavior.get("behavior", "normal")
-                emotion = self.current_emotion.get("emotion", "neutral")
-                weapon_detected = self.current_weapon.get("weapon_detected", False)
-                
-                threat_info = f"\n{'='*50}\n"
-                threat_info += f"🚨 SECURITY ANALYSIS:\n"
-                threat_info += f"{'='*50}\n"
-                threat_info += f"Threat Level: {threat_level.upper()}\n"
-                threat_info += f"Threat Score: {threat_score:.2f}\n"
-                if alerts:
-                    threat_info += f"Alerts: {', '.join(alerts)}\n"
-                threat_info += f"Behavior: {behavior.upper()}\n"
-                threat_info += f"Emotion: {emotion.upper()}\n"
-                if weapon_detected:
-                    threat_info += f"⚠️  WEAPON DETECTED!\n"
-                threat_info += f"{'='*50}\n"
+            # Add detection information
+            detection_info = ""
+            behavior = self.current_behavior.get("behavior", "normal")
+            emotion = self.current_emotion.get("emotion", "neutral")
+            weapon_detected = self.current_weapon.get("weapon_detected", False)
+            
+            detection_info = f"\n{'='*50}\n"
+            detection_info += f"DETECTION ANALYSIS:\n"
+            detection_info += f"{'='*50}\n"
+            detection_info += f"Behavior: {behavior.upper()}\n"
+            detection_info += f"Emotion: {emotion.upper()}\n"
+            if weapon_detected:
+                detection_info += f"WEAPON DETECTED!\n"
+            detection_info += f"{'='*50}\n"
             
             body = body_template.format(
                 timestamp=format_timestamp(),
                 count=self.stats.detection_count,
                 location=location_info,
-                threat_info=threat_info
+                detection_info=detection_info
             )
             msg.attach(MIMEText(body, 'plain'))
             
@@ -872,8 +679,8 @@ class HumanDetectionSystem:
         
         return overlay
     
-    def capture_and_save_image(self, frame: np.ndarray, recipient_email: str, threat_result: Dict = None):
-        """Capture image with location and threat overlay, then send email"""
+    def capture_and_save_image(self, frame: np.ndarray, recipient_email: str):
+        """Capture image with location overlay, then send email"""
         current_time = time.time()
         
         # Check cooldown
@@ -885,35 +692,25 @@ class HumanDetectionSystem:
         # Get fresh location at capture time
         location_details = self.location_service.get_full_location_details(force_update=True)
         
-        # Draw location and threat overlay on image
+        # Draw location overlay on image
         frame_with_overlay = self.draw_location_overlay_on_image(frame)
-        if threat_result:
-            frame_with_overlay = self.draw_threat_overlay_on_image(frame_with_overlay, threat_result)
         
-        # Generate filename with timestamp and threat level
+        # Generate filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         image_format = self.config.get("storage.image_format", "jpg")
-        
-        threat_level = "normal"
-        if threat_result:
-            threat_level = threat_result.get("threat_level", "normal")
-        filename = f"security_{threat_level}_{timestamp}.{image_format}"
+        filename = f"security_{timestamp}.{image_format}"
         filepath = os.path.join(self.save_folder, filename)
         
         # Save image
         image_quality = self.config.get("storage.image_quality", 95)
         cv2.imwrite(filepath, frame_with_overlay, [cv2.IMWRITE_JPEG_QUALITY, image_quality])
         
-        # Log capture with threat info
+        # Log capture
         if location_details["latitude"]:
             location_str = f"{location_details['place']} ({location_details['latitude']:.6f}, {location_details['longitude']:.6f})"
             print_success(f"Image saved: {filepath}")
             print_info(f"📍 Capture Location: {location_str}")
-            if threat_result:
-                threat_level = threat_result.get("threat_level", "normal")
-                threat_score = threat_result.get("threat_score", 0.0)
-                print_warning(f"⚠ Threat Level: {threat_level.upper()} (Score: {threat_score:.2f})")
-            self.logger.info(f"Image captured at location: {location_str}, Threat: {threat_level}")
+            self.logger.info(f"Image captured at location: {location_str}")
         else:
             print_success(f"Image saved: {filepath}")
             self.logger.info(f"Image captured: {filepath}")
@@ -922,45 +719,11 @@ class HumanDetectionSystem:
         
         # Send email if recipient email and password are set
         if recipient_email and self.sender_password:
-            self.send_email_with_image(recipient_email, filepath, location_details, threat_result)
+            self.send_email_with_image(recipient_email, filepath, location_details)
         elif not recipient_email:
             self.logger.warning("Email not sent - recipient email not provided")
         elif not self.sender_password:
             self.logger.warning("Email not sent - password not configured")
-    
-    def draw_threat_overlay_on_image(self, frame: np.ndarray, threat_result: Dict) -> np.ndarray:
-        """Draw threat information overlay on captured image"""
-        overlay = frame.copy()
-        h, w = frame.shape[:2]
-        
-        threat_level = threat_result.get("threat_level", "normal")
-        threat_score = threat_result.get("threat_score", 0.0)
-        alerts = threat_result.get("alerts", [])
-        
-        # Color based on threat level
-        if threat_level == "critical":
-            color = (0, 0, 255)  # Red
-        elif threat_level == "dangerous":
-            color = (0, 165, 255)  # Orange
-        elif threat_level == "suspicious":
-            color = (0, 255, 255)  # Yellow
-        else:
-            color = (0, 255, 0)  # Green
-        
-        # Draw threat banner at top
-        banner_height = 60
-        cv2.rectangle(overlay, (0, 0), (w, banner_height), (0, 0, 0), -1)
-        cv2.rectangle(overlay, (0, 0), (w, banner_height), color, 3)
-        
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        threat_text = f"THREAT LEVEL: {threat_level.upper()} ({threat_score:.2f})"
-        cv2.putText(overlay, threat_text, (10, 35), font, 0.8, color, 2)
-        
-        if alerts:
-            alert_text = " | ".join(alerts)
-            cv2.putText(overlay, alert_text, (10, 55), font, 0.5, (255, 255, 255), 1)
-        
-        return overlay
     
     def setup_email_credentials(self) -> Tuple[str, str]:
         """Setup email credentials interactively"""
@@ -1044,9 +807,9 @@ class HumanDetectionSystem:
         else:
             print_warning("Location service unavailable. Will retry during operation.")
         
-        print_success("Starting AI Security System v4.0...")
+        print_success("Starting AI Security System...")
         print_info("Press 'Q' to quit, 'R' to reset statistics")
-        self.logger.info("AI Security System v4.0 started")
+        self.logger.info("AI Security System started")
         
         prev_time = time.time()
         fps = 0.0
@@ -1067,73 +830,15 @@ class HumanDetectionSystem:
                 current_time = time.time()
                 self.frame_timestamp = current_time
                 
-                # === STEP 1: ENVIRONMENT ANALYSIS (v4.0) ===
-                # Calculate environmental parameters
-                gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                brightness = np.mean(gray_frame)
-                noise = cv2.Laplacian(gray_frame, cv2.CV_64F).var()
-                
-                # Motion detection
+                # === STEP 1: MOTION DETECTION ===
                 motion_result = self.motion_detector.detect(frame)
                 self.current_motion = motion_result
-                motion_intensity = motion_result.get("motion_intensity", 0.0)
                 
-                # IR detection
-                ir_detected = self.night_vision_processor.detect_ir(frame)
-                
-                # Get current threat score (if available from previous frame)
-                threat_score = self.current_threat.get("threat_score", 0.0) if self.current_threat else 0.0
-                
-                # Get pose confidence (will be updated after pose detection)
-                pose_confidence = None
-                if self.latest_result and self.latest_result.pose_landmarks:
-                    # Estimate confidence from number of detected landmarks
-                    pose_confidence = len(self.latest_result.pose_landmarks[0]) / 33.0 if self.latest_result.pose_landmarks else 0.0
-                
-                # Face availability (will be updated after emotion detection)
-                face_available = self.current_emotion.get("face_detected", False) if self.current_emotion else False
-                
-                # Select environment mode
-                mode_result = self.mode_selector.analyze(
-                    brightness=brightness,
-                    noise=noise,
-                    motion_intensity=motion_intensity,
-                    ir_detected=ir_detected,
-                    thermal_available=self.thermal_available,
-                    threat_score=threat_score,
-                    pose_confidence=pose_confidence,
-                    face_available=face_available
-                )
-                self.current_mode = mode_result
-                current_mode_name = mode_result["mode_name"]
-                
-                # Log mode change
-                if mode_result.get("mode_changed", False):
-                    self.logger.info(f"Mode changed: {mode_result['previous_mode']} -> {current_mode_name} - {mode_result['reason']}")
-                
-                # === STEP 2: APPLY MODE-SPECIFIC PROCESSING ===
-                # Get thermal frame if available
-                thermal_frame = None
-                if self.thermal_available and self.thermal_cap:
-                    try:
-                        ret, thermal_frame = self.thermal_cap.read()
-                        if not ret:
-                            thermal_frame = None
-                    except:
-                        thermal_frame = None
-                
-                # Process frame based on mode
-                frame_processed = self.night_vision_processor.process_frame(
-                    frame, 
-                    current_mode_name, 
-                    thermal_frame
-                )
-                
-                # Skip expensive AI processing if no motion detected (unless threat priority)
-                if not motion_result.get("motion_detected", False) and current_mode_name != "THREAT_PRIORITY":
+                # Skip expensive AI processing if no motion detected
+                if not motion_result.get("motion_detected", False):
                     frames_skipped += 1
                     # Still show UI with motion info, but skip AI processing
-                    display_frame = self.draw_ui_overlay(frame_processed, fps, False)
+                    display_frame = self.draw_ui_overlay(frame, fps, False)
                     cv2.imshow(self.window_name, display_frame)
                     
                     key = cv2.waitKey(1) & 0xFF
@@ -1143,8 +848,8 @@ class HumanDetectionSystem:
                         self.stats.reset()
                     continue
                 
-                # === STEP 3: POSE DETECTION (only if motion detected or threat priority) ===
-                rgb_frame = cv2.cvtColor(frame_processed, cv2.COLOR_BGR2RGB)
+                # === STEP 2: POSE DETECTION (only if motion detected) ===
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 rgb_frame = np.ascontiguousarray(rgb_frame.astype(np.uint8))
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
                 
@@ -1162,13 +867,13 @@ class HumanDetectionSystem:
                 
                 human_detected = self.is_human_detected()
                 
-                # === STEP 4: AI ANALYSIS (if human detected) ===
+                # === STEP 3: AI ANALYSIS (if human detected) ===
                 if human_detected:
                     self.stats.increment_detection()
                     
                     # Behavior classification
                     if self.latest_result and self.latest_result.pose_landmarks:
-                        h, w = frame_processed.shape[:2]
+                        h, w = frame.shape[:2]
                         behavior_result = self.behavior_classifier.classify(
                             self.latest_result.pose_landmarks,
                             w, h, current_time
@@ -1183,7 +888,7 @@ class HumanDetectionSystem:
                         # Estimate face region from pose landmarks
                         try:
                             nose = self.latest_result.pose_landmarks[0][0]
-                            h, w = frame_processed.shape[:2]
+                            h, w = frame.shape[:2]
                             face_size = int(w * 0.15)  # Approximate face size
                             face_x = int(nose.x * w) - face_size // 2
                             face_y = int(nose.y * h) - face_size // 2
@@ -1191,47 +896,30 @@ class HumanDetectionSystem:
                         except:
                             pass
                     
-                    emotion_result = self.emotion_detector.detect(frame_processed, face_region)
+                    emotion_result = self.emotion_detector.detect(frame, face_region)
                     self.current_emotion = emotion_result
                     
-                    # Weapon detection (force in threat priority mode)
-                    if current_mode_name == "THREAT_PRIORITY" or self.config.get("weapon.enabled", True):
-                        weapon_result = self.weapon_detector.detect(frame_processed)
+                    # Weapon detection
+                    if self.config.get("weapon.enabled", True):
+                        weapon_result = self.weapon_detector.detect(frame)
                     else:
-                        # Skip weapon detection in fast modes
                         weapon_result = {"weapon_detected": False, "weapons": [], "weapon_count": 0}
                     self.current_weapon = weapon_result
                     
-                    # Threat level computation
-                    threat_result = self.threat_engine.compute_threat(
-                        self.current_behavior,
-                        self.current_emotion,
-                        self.current_motion,
-                        self.current_weapon
-                    )
-                    self.current_threat = threat_result
+                    # Draw pose landmarks on frame
+                    frame = self.draw_pose_landmarks(frame)
                     
-                    # Handle alerts
-                    if self.threat_engine.should_send_alert(threat_result):
-                        self._handle_critical_alert(threat_result, recipient_email)
-                    
-                    # Draw pose landmarks on processed frame
-                    frame_processed = self.draw_pose_landmarks(frame_processed)
-                    
-                    # Capture image for threats or normal detection
-                    if threat_result.get("threat_level") in ["dangerous", "critical"] or \
-                       current_mode_name == "THREAT_PRIORITY" or \
-                       self.config.get("detection.capture_all", False):
-                        self.capture_and_save_image(frame_processed, recipient_email, threat_result)
+                    # Capture image if enabled
+                    if self.config.get("detection.capture_all", False):
+                        self.capture_and_save_image(frame, recipient_email)
                 else:
                     # No human detected - reset AI results
                     self.current_behavior = {"behavior": "normal", "confidence": 0.0}
                     self.current_emotion = {"emotion": "neutral", "confidence": 0.0}
                     self.current_weapon = {"weapon_detected": False}
-                    self.current_threat = {"threat_score": 0.0, "threat_level": "normal"}
                 
-                # === STEP 5: RENDER HUD ===
-                display_frame = self.draw_ui_overlay(frame_processed, fps, human_detected)
+                # === STEP 4: RENDER HUD ===
+                display_frame = self.draw_ui_overlay(frame, fps, human_detected)
                 
                 # Display frame
                 cv2.imshow(self.window_name, display_frame)
@@ -1265,37 +953,6 @@ class HumanDetectionSystem:
         finally:
             self.cleanup()
     
-    def _handle_critical_alert(self, threat_result: Dict, recipient_email: str):
-        """Handle critical threat alerts"""
-        current_time = time.time()
-        
-        # Sound alert (with cooldown)
-        if SOUND_AVAILABLE and (current_time - self.last_alert_time) > self.alert_cooldown:
-            try:
-                # Play alert sound in background thread
-                def play_alert():
-                    try:
-                        # Use system beep or alert sound
-                        import winsound
-                        winsound.Beep(1000, 500)  # Windows beep
-                    except:
-                        pass
-                
-                thread = threading.Thread(target=play_alert, daemon=True)
-                thread.start()
-                self.last_alert_time = current_time
-            except:
-                pass
-        
-        # Log critical alert
-        threat_level = threat_result.get("threat_level", "unknown")
-        alerts = threat_result.get("alerts", [])
-        self.logger.warning(f"CRITICAL ALERT: {threat_level} - {alerts}")
-        
-        # Email alert (if configured)
-        if recipient_email and self.sender_password:
-            # Will be sent via capture_and_save_image with threat info
-            pass
     
     def cleanup(self):
         """Cleanup resources"""

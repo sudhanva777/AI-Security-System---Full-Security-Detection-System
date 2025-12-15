@@ -30,19 +30,13 @@
     "confidence_threshold": 0.5,
     "enabled": true
   },
-  "threat": {
-    "emotion_weight": 0.2,
-    "behavior_weight": 0.4,
-    "motion_weight": 0.1,
-    "weapon_weight": 0.3
-  },
   "email": {
     "sender_email": "sudhanvapatil2004@gmail.com",
     "sender_password": "xxyxcflnmmxbmqch",
     "smtp_server": "smtp.gmail.com",
     "smtp_port": 587,
     "subject": "Person Detected - Location Alert",
-    "body": "A person was detected. Please find the captured image attached.\n\nDetection Time: {timestamp}\nTotal Detections Today: {count}\n\n{location}\n\n{threat_info}"
+    "body": "A person was detected. Please find the captured image attached.\n\nDetection Time: {timestamp}\nTotal Detections Today: {count}\n\n{location}\n\n{detection_info}"
   },
   "storage": {
     "save_folder": "C:\\Users\\Sudhanva Patil\\OneDrive\\Pictures\\New folder",
@@ -50,20 +44,8 @@
     "image_quality": 95,
     "max_images_per_day": 1000
   },
-  "mode": {
-    "threat_threshold": 0.7,
-    "motion_threshold": 70.0,
-    "brightness_low_light": 40.0,
-    "brightness_night": 12.0,
-    "ir_brightness_threshold": 20.0,
-    "ir_noise_threshold": 40.0,
-    "gamma_low_light": 2.0,
-    "gamma_night": 2.4,
-    "denoise_strength": 10,
-    "thermal_available": false
-  },
   "ui": {
-    "window_name": "AI Security System v4.0",
+    "window_name": "AI Security System",
     "show_fps": true,
     "show_statistics": true,
     "show_timestamp": true,
