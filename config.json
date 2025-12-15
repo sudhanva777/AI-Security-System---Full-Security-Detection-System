@@ -1,0 +1,80 @@
+{
+  "camera": {
+    "index": 0,
+    "width": 1280,
+    "height": 720,
+    "fps": 60
+  },
+  "detection": {
+    "model_path": "D:\\VS CODE\\AIML-DS CODE\\models\\pose_landmarker_lite.task",
+    "model_url": "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+    "running_mode": "VIDEO",
+    "capture_cooldown": 5,
+    "min_confidence": 0.5,
+    "capture_all": false
+  },
+  "motion": {
+    "threshold": 0.02,
+    "enabled": true
+  },
+  "behavior": {
+    "loitering_threshold": 5.0,
+    "restricted_areas": []
+  },
+  "emotion": {
+    "use_deepface": false,
+    "enabled": true
+  },
+  "weapon": {
+    "model_path": null,
+    "confidence_threshold": 0.5,
+    "enabled": true
+  },
+  "threat": {
+    "emotion_weight": 0.2,
+    "behavior_weight": 0.4,
+    "motion_weight": 0.1,
+    "weapon_weight": 0.3
+  },
+  "email": {
+    "sender_email": "sudhanvapatil2004@gmail.com",
+    "sender_password": "xxyxcflnmmxbmqch",
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "subject": "Person Detected - Location Alert",
+    "body": "A person was detected. Please find the captured image attached.\n\nDetection Time: {timestamp}\nTotal Detections Today: {count}\n\n{location}\n\n{threat_info}"
+  },
+  "storage": {
+    "save_folder": "C:\\Users\\Sudhanva Patil\\OneDrive\\Pictures\\New folder",
+    "image_format": "jpg",
+    "image_quality": 95,
+    "max_images_per_day": 1000
+  },
+  "mode": {
+    "threat_threshold": 0.7,
+    "motion_threshold": 70.0,
+    "brightness_low_light": 40.0,
+    "brightness_night": 12.0,
+    "ir_brightness_threshold": 20.0,
+    "ir_noise_threshold": 40.0,
+    "gamma_low_light": 2.0,
+    "gamma_night": 2.4,
+    "denoise_strength": 10,
+    "thermal_available": false
+  },
+  "ui": {
+    "window_name": "AI Security System v4.0",
+    "show_fps": true,
+    "show_statistics": true,
+    "show_timestamp": true,
+    "show_location": true,
+    "font_scale": 0.7,
+    "status_bar_height": 140
+  },
+  "logging": {
+    "enabled": true,
+    "log_folder": "logs",
+    "log_level": "INFO",
+    "log_format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}

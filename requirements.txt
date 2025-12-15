@@ -1,0 +1,13 @@
+opencv-python>=4.8.0
+mediapipe>=0.10.0
+numpy>=1.24.0
+colorama>=0.4.6
+geocoder>=1.38.1
+geopy>=2.4.0
+requests>=2.31.0
+ultralytics>=8.0.0
+deepface>=0.0.79
+playsound>=1.3.0
+scipy>=1.10.0
+
+
